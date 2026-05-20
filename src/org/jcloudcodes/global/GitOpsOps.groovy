@@ -32,13 +32,13 @@ class GitOpsOps implements Serializable {
         cloneRepo(config) {
             steps.sh """
                 docker run --rm \
-                  --user "$(id -u):$(id -g)" \
+                  --user "\$(id -u):\$(id -g)" \
                   -v "\$PWD:/workdir" \
                   -w /workdir \
                   '${config.get('yqCliImage', 'mikefarah/yq:4.53.2')}' \
                   eval -i '.image.repository = "${config.imageRepository}"' '${config.helmValuesFile}'
                 docker run --rm \
-                  --user "$(id -u):$(id -g)" \
+                  --user "\$(id -u):\$(id -g)" \
                   -v "\$PWD:/workdir" \
                   -w /workdir \
                   '${config.get('yqCliImage', 'mikefarah/yq:4.53.2')}' \

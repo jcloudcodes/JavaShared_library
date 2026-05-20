@@ -16,6 +16,18 @@ class GitOpsOps implements Serializable {
                 'https://oauth2:$GITOPS_TOKEN@'
             )
 
+            // Earlier builds wrote gitops-repo files as root via Docker.
+            // Clean that directory through a container first so Jenkins can proceed.
+            steps.sh """
+                if [ -d gitops-repo ]; then
+                  docker run --rm \
+                    -v "\$PWD:/workspace" \
+                    -w /workspace \
+                    '${config.get('yqCliImage', 'mikefarah/yq:4.53.2')}' \
+                    sh -lc 'rm -rf /workspace/gitops-repo'
+                fi
+            """
+
             steps.dir('gitops-repo') {
                 steps.deleteDir()
                 steps.sh """

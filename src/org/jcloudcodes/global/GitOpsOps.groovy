@@ -21,10 +21,11 @@ class GitOpsOps implements Serializable {
             steps.sh """
                 if [ -d gitops-repo ]; then
                   docker run --rm \
+                    --entrypoint sh \
                     -v "\$PWD:/workspace" \
                     -w /workspace \
                     '${config.get('yqCliImage', 'mikefarah/yq:4.53.2')}' \
-                    sh -lc 'rm -rf /workspace/gitops-repo'
+                    -lc 'rm -rf /workspace/gitops-repo'
                 fi
             """
 

@@ -20,7 +20,7 @@ def call(Map userConfig = [:]) {
         options {
             timestamps()
             disableConcurrentBuilds()
-            buildDiscarder(logRotator(numToKeepStr: '20'))
+            buildDiscarder(logRotator(numToKeepStr: '5'))
         }
 
         tools {

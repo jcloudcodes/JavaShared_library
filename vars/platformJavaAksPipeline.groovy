@@ -62,7 +62,12 @@ def call(Map userConfig = [:]) {
             stage('Package') {
                 steps { script { javaTemplate.packageArtifact(config) } }
             }
-
+            stage('Docker Build') {
+                    steps { script { dockerTemplate.buildImage(config) } }
+            }
+            stage('Docker Push') {
+                    steps { script { dockerTemplate.pushDockerHub(config) } }
+            }
             /*
              * First-time test mode:
              * leave only the core Java lifecycle stages enabled.

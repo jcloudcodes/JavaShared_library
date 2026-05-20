@@ -68,6 +68,25 @@ def call(Map userConfig = [:]) {
             stage('Docker Push') {
                     steps { script { dockerTemplate.pushDockerHub(config) } }
             }
+            stage('GitLab Maven Registry Publish') {
+                    when { expression { config.gitlabRegistryEnabled || config.gitlabMavenRegistryEnabled } }
+                    steps { script { gitlabRegistryTemplate.publish(config) } }
+            }
+            stage('Helm Package') {
+                    when { expression { config.helmChartPath?.trim() } }
+                    steps { script { helmTemplate.packageChart(config) } }
+            }
+            stage('Helm Publish') {
+                    when { expression { config.helmPublishEnabled } }
+                    steps { script { helmTemplate.publishChart(config) } }
+            }
+            stage('GitOps Update') {
+                    steps { script { aksTemplate.update(config) } }
+            }
+            stage('Refresh Vault Token') {
+                    when { expression { config.refreshVaultToken && config.aksClusterName?.trim() } }
+                    steps { script { aksTemplate.refreshVaultToken(config) } }
+            }
             /*
              * First-time test mode:
              * leave only the core Java lifecycle stages enabled.

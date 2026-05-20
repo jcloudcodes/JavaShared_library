@@ -20,6 +20,7 @@ class PlatformJavaAksPipeline implements Serializable {
             nexusEnabled             : userConfig.get('nexusEnabled', false),
             helmPublishEnabled       : userConfig.get('helmPublishEnabled', false),
             gitlabRegistryEnabled    : userConfig.get('gitlabRegistryEnabled', false),
+            useVaultDockerCredentials: userConfig.get('useVaultDockerCredentials', true),
             deployLinuxTomcat        : userConfig.get('deployLinuxTomcat', false),
             deployWindowsTomcat      : userConfig.get('deployWindowsTomcat', false),
             imageTag                 : userConfig.get('imageTag', buildNumber ?: 'latest')
@@ -37,9 +38,12 @@ class PlatformJavaAksPipeline implements Serializable {
             'vaultSecretPath',
             'vaultRoleIdCredentialId',
             'vaultSecretIdCredentialId',
-            'dockerCredentialId',
             'gitopsRepoTokenCredentialId'
         ]
+
+        if (!config.get('useVaultDockerCredentials', true)) {
+            required = required + ['dockerCredentialId']
+        }
 
         required.findAll { !config[it]?.toString()?.trim() }
     }

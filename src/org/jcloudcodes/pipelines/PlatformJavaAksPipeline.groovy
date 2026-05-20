@@ -5,6 +5,7 @@ class PlatformJavaAksPipeline implements Serializable {
     Map prepareConfig(Map userConfig = [:], String buildNumber = 'latest') {
         [
             agentLabel               : userConfig.get('agentLabel', ''),
+            mavenToolName            : userConfig.get('mavenToolName', ''),
             javaVersion              : userConfig.get('javaVersion', '17'),
             mavenCommand             : userConfig.get('mavenCommand', 'mvn'),
             mavenCliOpts             : userConfig.get('mavenCliOpts', '-B -DskipTests=false'),

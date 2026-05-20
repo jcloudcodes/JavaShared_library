@@ -13,12 +13,18 @@ def call(Map userConfig = [:]) {
     def javaTemplate = new JavaMavenTemplate(this)
 
     pipeline {
-        agent any
+        agent {
+            label "${config.agentLabel}"
+        }
 
         options {
             timestamps()
             disableConcurrentBuilds()
             buildDiscarder(logRotator(numToKeepStr: '20'))
+        }
+
+        tools {
+            maven "${config.mavenToolName}"
         }
 
         environment {
@@ -62,12 +68,11 @@ def call(Map userConfig = [:]) {
              * leave only the core Java lifecycle stages enabled.
              * Uncomment the later stages one at a time as you expand testing.
              *
-             * Notes for later:
-             * - this first-test version intentionally uses `agent any`
-             * - `ansiColor` was removed because your current Jenkins setup
+             * Notes:
+             * - this version now expects a Jenkins agent label in config.agentLabel
+             * - this version now expects a Jenkins Maven tool name in config.mavenToolName
+             * - ansiColor was removed because your current Jenkins setup
              *   does not accept it in declarative options
-             * - if you want label-based agents later, we can add them back
-             *   in a Jenkins-safe way after the core path is stable
              */
         }
     }

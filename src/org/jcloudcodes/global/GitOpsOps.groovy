@@ -19,7 +19,7 @@ class GitOpsOps implements Serializable {
             steps.dir('gitops-repo') {
                 steps.deleteDir()
                 steps.sh """
-                    git clone '${authedUrl}' .
+                    git clone "${authedUrl}" .
                     git config user.email '${config.get('gitUserEmail', 'ci@jcloudcodes.local')}'
                     git config user.name '${config.get('gitUserName', 'Jenkins CI')}'
                 """

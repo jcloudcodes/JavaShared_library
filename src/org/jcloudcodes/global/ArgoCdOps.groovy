@@ -66,6 +66,7 @@ class ArgoCdOps implements Serializable {
         String kubeDir = config.get('workspaceKubeDir', '.kube')
         steps.sh """
             docker run --rm \
+              --network host \
               -v "\$PWD:/workdir" \
               -w /workdir \
               -v "\$PWD/${kubeDir}:/root/.kube" \
@@ -78,6 +79,7 @@ class ArgoCdOps implements Serializable {
         String escaped = command.replace("\"", "\\\"")
         steps.sh """
             docker run --rm \
+              --network host \
               -e ARGOCD_USERNAME="\$ARGOCD_USERNAME" \
               -e ARGOCD_PASSWORD="\$ARGOCD_PASSWORD" \
               '${config.get('argocdCliImage', 'quay.io/argoproj/argocd:v3.4.1')}' \

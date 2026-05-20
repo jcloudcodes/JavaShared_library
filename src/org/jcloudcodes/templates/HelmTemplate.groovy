@@ -16,6 +16,7 @@ class HelmTemplate implements Serializable {
         steps.sh """
             mkdir -p '${config.get('helmPackageOutputDir', 'dist/helm')}'
             docker run --rm \
+              --network host \
               -v "\$PWD:/workdir" \
               -w /workdir \
               '${config.get('helmKubectlImage', 'dtzar/helm-kubectl:3.19.1')}' \
@@ -32,6 +33,7 @@ class HelmTemplate implements Serializable {
         String escaped = config.helmPublishCommand.replace("'", "'\"'\"'")
         steps.sh """
             docker run --rm \
+              --network host \
               -v "\$PWD:/workdir" \
               -w /workdir \
               '${config.get('helmKubectlImage', 'dtzar/helm-kubectl:3.19.1')}' \

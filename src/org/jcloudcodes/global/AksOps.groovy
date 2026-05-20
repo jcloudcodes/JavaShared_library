@@ -56,6 +56,7 @@ class AksOps implements Serializable {
         String kubeDir = config.get('workspaceKubeDir', '.kube')
         steps.sh """
             docker run --rm \
+              --network host \
               -v "\$PWD:/workdir" \
               -w /workdir \
               -v "\$PWD/${kubeDir}:/root/.kube" \
@@ -70,6 +71,7 @@ class AksOps implements Serializable {
         steps.sh(
             script: """
                 docker run --rm \
+                  --network host \
                   -v "\$PWD:/workdir" \
                   -w /workdir \
                   -v "\$PWD/${kubeDir}:/root/.kube" \

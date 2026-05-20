@@ -15,8 +15,11 @@ class HelmTemplate implements Serializable {
 
         steps.sh """
             mkdir -p '${config.get('helmPackageOutputDir', 'dist/helm')}'
-            helm dependency update '${config.helmChartPath}' || true
-            helm package '${config.helmChartPath}' --destination '${config.get('helmPackageOutputDir', 'dist/helm')}'
+            docker run --rm \
+              -v "\$PWD:/workdir" \
+              -w /workdir \
+              '${config.get('helmKubectlImage', 'dtzar/helm-kubectl:3.19.1')}' \
+              sh -lc "helm dependency update '${config.helmChartPath}' || true && helm package '${config.helmChartPath}' --destination '${config.get('helmPackageOutputDir', 'dist/helm')}'"
         """
     }
 
@@ -26,6 +29,13 @@ class HelmTemplate implements Serializable {
             return
         }
 
-        steps.sh config.helmPublishCommand
+        String escaped = config.helmPublishCommand.replace("'", "'\"'\"'")
+        steps.sh """
+            docker run --rm \
+              -v "\$PWD:/workdir" \
+              -w /workdir \
+              '${config.get('helmKubectlImage', 'dtzar/helm-kubectl:3.19.1')}' \
+              sh -lc '${escaped}'
+        """
     }
 }

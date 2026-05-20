@@ -31,17 +31,13 @@ class AksOps implements Serializable {
 
         vaultOps.writeKubeconfig(config)
 
-        steps.sh """
-            kubectl get namespace '${esoNamespace}' || kubectl create namespace '${esoNamespace}'
-            kubectl delete secret vault-token -n '${esoNamespace}' --ignore-not-found
-            kubectl create secret generic vault-token -n '${esoNamespace}' --from-literal=token='${esoToken}'
-        """
+        runKubectl(config, "kubectl get namespace '${esoNamespace}' || kubectl create namespace '${esoNamespace}'")
+        runKubectl(config, "kubectl delete secret vault-token -n '${esoNamespace}' --ignore-not-found")
+        runKubectl(config, "kubectl create secret generic vault-token -n '${esoNamespace}' --from-literal=token='${esoToken}'")
 
-        if (steps.sh(script: "kubectl get deployment external-secrets -n '${esoNamespace}' >/dev/null 2>&1", returnStatus: true) == 0) {
-            steps.sh """
-                kubectl rollout restart deployment external-secrets -n '${esoNamespace}'
-                kubectl rollout status deployment external-secrets -n '${esoNamespace}'
-            """
+        if (runKubectlStatus(config, "kubectl get deployment external-secrets -n '${esoNamespace}' >/dev/null 2>&1") == 0) {
+            runKubectl(config, "kubectl rollout restart deployment external-secrets -n '${esoNamespace}'")
+            runKubectl(config, "kubectl rollout status deployment external-secrets -n '${esoNamespace}'")
         } else {
             steps.echo "external-secrets deployment not found in namespace '${esoNamespace}', skipping rollout restart"
         }
@@ -49,11 +45,38 @@ class AksOps implements Serializable {
 
     void verifyNamespace(Map config) {
         vaultOps.writeKubeconfig(config)
+        runKubectl(config, "kubectl get namespace '${config.kubeNamespace}' || kubectl create namespace '${config.kubeNamespace}'")
+        runKubectl(config, "kubectl get pods -n '${config.kubeNamespace}'")
+        runKubectl(config, "kubectl get svc -n '${config.kubeNamespace}'")
+        runKubectl(config, "kubectl get ingress -n '${config.kubeNamespace}' || true")
+    }
+
+    private void runKubectl(Map config, String command) {
+        String escaped = command.replace("'", "'\"'\"'")
+        String kubeDir = config.get('workspaceKubeDir', '.kube')
         steps.sh """
-            kubectl get namespace '${config.kubeNamespace}' || kubectl create namespace '${config.kubeNamespace}'
-            kubectl get pods -n '${config.kubeNamespace}'
-            kubectl get svc -n '${config.kubeNamespace}'
-            kubectl get ingress -n '${config.kubeNamespace}' || true
+            docker run --rm \
+              -v "\$PWD:/workdir" \
+              -w /workdir \
+              -v "\$PWD/${kubeDir}:/root/.kube" \
+              '${config.get('helmKubectlImage', 'dtzar/helm-kubectl:3.19.1')}' \
+              sh -lc '${escaped}'
         """
+    }
+
+    private int runKubectlStatus(Map config, String command) {
+        String escaped = command.replace("'", "'\"'\"'")
+        String kubeDir = config.get('workspaceKubeDir', '.kube')
+        steps.sh(
+            script: """
+                docker run --rm \
+                  -v "\$PWD:/workdir" \
+                  -w /workdir \
+                  -v "\$PWD/${kubeDir}:/root/.kube" \
+                  '${config.get('helmKubectlImage', 'dtzar/helm-kubectl:3.19.1')}' \
+                  sh -lc '${escaped}'
+            """,
+            returnStatus: true
+        )
     }
 }

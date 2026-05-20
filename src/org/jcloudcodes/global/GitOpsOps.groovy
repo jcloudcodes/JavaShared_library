@@ -31,8 +31,16 @@ class GitOpsOps implements Serializable {
     void updateImageValues(Map config) {
         cloneRepo(config) {
             steps.sh """
-                yq -i '.image.repository = "${config.imageRepository}"' '${config.helmValuesFile}'
-                yq -i '.image.tag = "${config.imageTag}"' '${config.helmValuesFile}'
+                docker run --rm \
+                  -v "\$PWD:/workdir" \
+                  -w /workdir \
+                  '${config.get('yqCliImage', 'mikefarah/yq:4.53.2')}' \
+                  eval -i '.image.repository = "${config.imageRepository}"' '${config.helmValuesFile}'
+                docker run --rm \
+                  -v "\$PWD:/workdir" \
+                  -w /workdir \
+                  '${config.get('yqCliImage', 'mikefarah/yq:4.53.2')}' \
+                  eval -i '.image.tag = "${config.imageTag}"' '${config.helmValuesFile}'
                 git add '${config.helmValuesFile}'
                 git commit -m 'Update ${config.appName} image to ${config.imageTag}' || echo 'No GitOps changes'
                 git push origin HEAD:${config.get('gitopsBranch', 'main')}

@@ -14,10 +14,8 @@ class ArgoCdOps implements Serializable {
     void bootstrapApplication(Map config) {
         vaultOps.writeKubeconfig(config)
         gitOpsOps.cloneRepo(config) {
-            steps.sh """
-                test -f '${config.argocdAppManifestFile}'
-                kubectl apply -f '${config.argocdAppManifestFile}'
-            """
+            runKubectl(config, "test -f '${config.argocdAppManifestFile}'")
+            runKubectl(config, "kubectl apply -f '${config.argocdAppManifestFile}'")
         }
     }
 
@@ -57,15 +55,33 @@ class ArgoCdOps implements Serializable {
     }
 
     private void doSync(Map config) {
+        runArgoCd(config, "argocd login '${config.argocdServer}' --username \"\$ARGOCD_USERNAME\" --password \"\$ARGOCD_PASSWORD\" --insecure --grpc-web")
+        runArgoCd(config, "argocd app get '${config.argocdAppName}' --grpc-web")
+        runArgoCd(config, "argocd app sync '${config.argocdAppName}' --grpc-web")
+        runArgoCd(config, "argocd app wait '${config.argocdAppName}' --health --sync --timeout 600 --grpc-web")
+    }
+
+    private void runKubectl(Map config, String command) {
+        String escaped = command.replace("'", "'\"'\"'")
+        String kubeDir = config.get('workspaceKubeDir', '.kube')
         steps.sh """
-            argocd login '${config.argocdServer}' \
-              --username "$ARGOCD_USERNAME" \
-              --password "$ARGOCD_PASSWORD" \
-              --insecure \
-              --grpc-web
-            argocd app get '${config.argocdAppName}' --grpc-web
-            argocd app sync '${config.argocdAppName}' --grpc-web
-            argocd app wait '${config.argocdAppName}' --health --sync --timeout 600 --grpc-web
+            docker run --rm \
+              -v "\$PWD:/workdir" \
+              -w /workdir \
+              -v "\$PWD/${kubeDir}:/root/.kube" \
+              '${config.get('helmKubectlImage', 'dtzar/helm-kubectl:3.19.1')}' \
+              sh -lc '${escaped}'
+        """
+    }
+
+    private void runArgoCd(Map config, String command) {
+        String escaped = command.replace("\"", "\\\"")
+        steps.sh """
+            docker run --rm \
+              -e ARGOCD_USERNAME="\$ARGOCD_USERNAME" \
+              -e ARGOCD_PASSWORD="\$ARGOCD_PASSWORD" \
+              '${config.get('argocdCliImage', 'quay.io/argoproj/argocd:v3.4.1')}' \
+              sh -lc "${escaped}"
         """
     }
 }

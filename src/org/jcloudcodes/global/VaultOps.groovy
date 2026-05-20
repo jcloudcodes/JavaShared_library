@@ -1,5 +1,7 @@
 package org.jcloudcodes.global
 
+import java.util.Base64
+
 class VaultOps implements Serializable {
     private final def steps
 
@@ -54,16 +56,12 @@ class VaultOps implements Serializable {
     }
 
     void writeKubeconfig(Map config) {
-        withVaultToken(config) {
-            steps.sh 'mkdir -p ~/.kube'
-            steps.sh(
-                script: """
-                    vault kv get -mount='${config.vaultKvMount}' \
-                      -field='AKS_KUBECONFIG_B64' \
-                      '${config.vaultSecretPath}' | base64 -d > ~/.kube/config
-                """
-            )
-            steps.sh 'kubectl config current-context'
-        }
+        String encoded = readKvField(config, 'AKS_KUBECONFIG_B64')
+        String kubeDir = config.get('workspaceKubeDir', '.kube')
+        String kubeFile = "${kubeDir}/config"
+        String decoded = new String(Base64.decoder.decode(encoded), 'UTF-8')
+
+        steps.sh "mkdir -p '${kubeDir}'"
+        steps.writeFile(file: kubeFile, text: decoded)
     }
 }

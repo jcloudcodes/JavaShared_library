@@ -12,6 +12,7 @@ class PlatformJavaAksPipeline implements Serializable {
             mavenRepoLocal           : userConfig.get('mavenRepoLocal', '.m2/repository'),
             gitopsBranch             : userConfig.get('gitopsBranch', 'main'),
             externalSecretsNamespace : userConfig.get('externalSecretsNamespace', 'external-secrets'),
+            workspaceKubeDir         : userConfig.get('workspaceKubeDir', '.kube'),
             verifyEnvironment        : userConfig.get('verifyEnvironment', true),
             refreshVaultToken        : userConfig.get('refreshVaultToken', true),
             bootstrapArgoCdApp       : userConfig.get('bootstrapArgoCdApp', true),
@@ -21,6 +22,10 @@ class PlatformJavaAksPipeline implements Serializable {
             helmPublishEnabled       : userConfig.get('helmPublishEnabled', false),
             gitlabRegistryEnabled    : userConfig.get('gitlabRegistryEnabled', false),
             useVaultDockerCredentials: userConfig.get('useVaultDockerCredentials', true),
+            helmKubectlImage         : userConfig.get('helmKubectlImage', 'dtzar/helm-kubectl:3.19.1'),
+            argocdCliImage           : userConfig.get('argocdCliImage', 'quay.io/argoproj/argocd:v3.4.1'),
+            yqCliImage               : userConfig.get('yqCliImage', 'mikefarah/yq:4.53.2'),
+            curlJqYqImage            : userConfig.get('curlJqYqImage', 'badouralix/curl-jq-yq:latest'),
             deployLinuxTomcat        : userConfig.get('deployLinuxTomcat', false),
             deployWindowsTomcat      : userConfig.get('deployWindowsTomcat', false),
             imageTag                 : userConfig.get('imageTag', buildNumber ?: 'latest')

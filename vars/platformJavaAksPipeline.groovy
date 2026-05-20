@@ -101,6 +101,18 @@ def call(Map userConfig = [:]) {
                     when { expression { config.refreshVaultToken && config.aksClusterName?.trim() } }
                     steps { script { aksTemplate.refreshVaultToken(config) } }
             }
+            stage('Bootstrap Argo CD App') {
+                    when { expression { config.bootstrapArgoCdApp && config.argocdAppManifestFile?.trim() } }
+                    steps { script { aksTemplate.bootstrapApp(config) } }
+            }
+            stage('Argo CD Sync') {
+                    when { expression { config.argocdServer?.trim() && config.argocdAppName?.trim() } }
+                    steps { script { aksTemplate.sync(config) } }
+            }
+            stage('Verify Environment') {
+                    when { expression { config.verifyEnvironment && config.kubeNamespace?.trim() && config.aksClusterName?.trim() } }
+                    steps { script { aksTemplate.verify(config) } }
+            }
             /*
              * First-time test mode:
              * leave only the core Java lifecycle stages enabled.

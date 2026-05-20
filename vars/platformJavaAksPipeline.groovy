@@ -1,5 +1,12 @@
 import org.jcloudcodes.pipelines.PlatformJavaAksPipeline
+import org.jcloudcodes.templates.DockerTemplate
+import org.jcloudcodes.templates.GitOpsAksTemplate
+import org.jcloudcodes.templates.GitlabMavenRegistryTemplate
+import org.jcloudcodes.templates.HelmTemplate
 import org.jcloudcodes.templates.JavaMavenTemplate
+import org.jcloudcodes.templates.NexusTemplate
+import org.jcloudcodes.templates.SonarTemplate
+import org.jcloudcodes.templates.TomcatDeployTemplate
 
 def call(Map userConfig = [:]) {
     def pipelineConfig = new PlatformJavaAksPipeline()
@@ -11,6 +18,13 @@ def call(Map userConfig = [:]) {
     }
 
     def javaTemplate = new JavaMavenTemplate(this)
+    def dockerTemplate = new DockerTemplate(this)
+    def sonarTemplate = new SonarTemplate(this)
+    def nexusTemplate = new NexusTemplate(this)
+    def gitlabRegistryTemplate = new GitlabMavenRegistryTemplate(this)
+    def helmTemplate = new HelmTemplate(this)
+    def aksTemplate = new GitOpsAksTemplate(this)
+    def tomcatTemplate = new TomcatDeployTemplate(this)
 
     pipeline {
         agent {

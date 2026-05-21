@@ -13,7 +13,9 @@ class DockerTemplate implements Serializable {
 
     void buildImage(Map config) {
         String image = "${config.imageRepository}:${config.imageTag}"
-        steps.sh "docker build -t '${image}' ."
+        String extraArgs = config.get('dockerBuildExtraArgs', '').trim()
+        String extra = extraArgs ? extraArgs + ' ' : ''
+        steps.sh "docker build ${extra}-t '${image}' ."
     }
 
     void pushDockerHub(Map config) {

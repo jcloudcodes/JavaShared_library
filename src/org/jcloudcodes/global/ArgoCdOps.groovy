@@ -14,6 +14,11 @@ class ArgoCdOps implements Serializable {
     void bootstrapApplication(Map config) {
         vaultOps.writeKubeconfig(config)
         gitOpsOps.cloneRepo(config) {
+            String kubeDir = config.get('workspaceKubeDir', '.kube')
+            steps.sh """
+                mkdir -p '${kubeDir}'
+                cp '../${kubeDir}/config' '${kubeDir}/config'
+            """
             runKubectl(config, "test -f '${config.argocdAppManifestFile}'")
             runKubectl(config, "kubectl apply --validate=false -f '${config.argocdAppManifestFile}'")
         }

@@ -60,10 +60,22 @@ class ArgoCdOps implements Serializable {
     }
 
     private void doSync(Map config) {
-        runArgoCd(config, "argocd login '${config.argocdServer}' --username \"\$ARGOCD_USERNAME\" --password \"\$ARGOCD_PASSWORD\" --insecure --grpc-web")
-        runArgoCd(config, "argocd app get '${config.argocdAppName}' --grpc-web")
-        runArgoCd(config, "argocd app sync '${config.argocdAppName}' --grpc-web")
-        runArgoCd(config, "argocd app wait '${config.argocdAppName}' --health --sync --timeout 600 --grpc-web")
+        runArgoCdWithLogin(config, "argocd app get '${config.argocdAppName}' --grpc-web")
+        runArgoCdWithLogin(config, "argocd app sync '${config.argocdAppName}' --grpc-web")
+        runArgoCdWithLogin(config, "argocd app wait '${config.argocdAppName}' --health --sync --timeout 600 --grpc-web")
+    }
+
+    private void runArgoCdWithLogin(Map config, String command) {
+        String escaped = command.replace("\"", "\\\"")
+        String loginCommand = 'argocd login \'' + config.argocdServer + '\' --username "\$ARGOCD_USERNAME" --password "\$ARGOCD_PASSWORD" --insecure --grpc-web >/dev/null'
+        steps.sh """
+            docker run --rm \
+              --network host \
+              -e ARGOCD_USERNAME="\$ARGOCD_USERNAME" \
+              -e ARGOCD_PASSWORD="\$ARGOCD_PASSWORD" \
+              '${config.get('argocdCliImage', 'quay.io/argoproj/argocd:v3.4.1')}' \
+              sh -lc "${loginCommand} && ${escaped}"
+        """
     }
 
     private void runKubectl(Map config, String command) {

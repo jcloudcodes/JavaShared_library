@@ -15,7 +15,7 @@ class ArgoCdOps implements Serializable {
         vaultOps.writeKubeconfig(config)
         gitOpsOps.cloneRepo(config) {
             runKubectl(config, "test -f '${config.argocdAppManifestFile}'")
-            runKubectl(config, "kubectl apply -f '${config.argocdAppManifestFile}'")
+            runKubectl(config, "kubectl apply --validate=false -f '${config.argocdAppManifestFile}'")
         }
     }
 

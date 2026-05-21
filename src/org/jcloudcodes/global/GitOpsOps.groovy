@@ -21,6 +21,7 @@ class GitOpsOps implements Serializable {
             steps.sh """
                 if [ -d gitops-repo ]; then
                   docker run --rm \
+                    --user 0:0 \
                     --entrypoint sh \
                     -v "\$PWD:/workspace" \
                     -w /workspace \
